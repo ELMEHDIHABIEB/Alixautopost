@@ -3,6 +3,7 @@ name: Auto-Post to Telegram
 on:
   schedule:
     - cron: '*/1 * * * *'  # Runs every minute
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   post:
@@ -18,7 +19,10 @@ jobs:
         python-version: '3.8'
 
     - name: Install dependencies
-      run: pip install requests beautifulsoup4
+      run: pip install requests
 
     - name: Run the bot
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: python bot.py
