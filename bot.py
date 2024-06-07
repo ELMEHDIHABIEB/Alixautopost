@@ -1,70 +1,40 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import random
-import os
 
-# قراءة رمز البوت ومعرف المحادثة من المتغيرات البيئية
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# رابط صفحة البحث في AliExpress
-SEARCH_URL = "https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20210608035853&SearchText=smartphone"
-
-def fetch_random_product():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, مثل Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-
-    response = requests.get(SEARCH_URL, headers=headers)
+def get_random_product():
+    url = "https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20220101000000&SearchText=smartphone"
+    response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
+    
+    products = soup.find_all('a', class_='manhattan--container--1lP57Ag cards--gallery--2o6yJVt')
+    random_product = random.choice(products)
+    
+    product_link = "https:" + random_product['href']
+    product_title = random_product.find('h1', class_='manhattan--titleText--WccSjUS').text
+    product_image = random_product.find('img')['src']
+    
+    return product_title, product_link, product_image
 
-    # إيجاد جميع الحاويات المنتجات
-    product_containers = soup.find_all('a', class_='manhattan--titleText--WccSjUS')
-
-    if not product_containers:
-        return None
-
-    # اختيار منتج عشوائي
-    product = random.choice(product_containers)
-    product_title = product.get_text().strip()
-    product_link = "https:" + product['href']
-
-    # الحصول على صورة المنتج
-    product_image_container = product.find_previous('img', class_='manhattan--img--low--AcYdYMN')
-    product_image = product_image_container['src'] if product_image_container else None
-
-    return {
-        'title': product_title,
-        'link': product_link,
-        'image': product_image
+def send_message(product_title, product_link, product_image):
+    message = f"*{product_title}*\n\nCheck it out [here]({product_link})!\n\n![Product Image]({product_image})"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        'chat_id': TELEGRAM_CHAT_ID,
+        'text': message,
+        'parse_mode': 'Markdown'
     }
-
-def send_message(product):
-    if product:
-        message = f"**{product['title']}**\n\nCheck it out here: [Product Link]({product['link']})"
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
-        payload = {
-            'chat_id': CHAT_ID,
-            'caption': message,
-            'photo': product['image'],
-            'parse_mode': 'Markdown'
-        }
-    else:
-        message = "I'm sorry, I can't extract products."
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {
-            'chat_id': CHAT_ID,
-            'text': message,
-            'parse_mode': 'Markdown'
-        }
-
     response = requests.post(url, data=payload)
     return response.json()
 
 def main():
-    print("Fetching random product...")
-    product = fetch_random_product()
-    response = send_message(product)
+    print("Sending test message...")
+    product_title, product_link, product_image = get_random_product()
+    response = send_message(product_title, product_link, product_image)
     print("Message sent:", response)
 
 if __name__ == "__main__":
