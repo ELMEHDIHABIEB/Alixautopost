@@ -4,11 +4,11 @@ import random
 import os
 import time
 
-# Replace with your bot's token and chat ID
+# Read bot token and chat ID from environment variables
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# URL of the AliExpress search page (modify this to target specific categories if needed)
+# URL of the AliExpress search page
 SEARCH_URL = "https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20210608035853&SearchText=smartphone"
 
 def fetch_random_product():
@@ -54,10 +54,12 @@ def send_message(product):
 
 def main():
     while True:
+        print("Fetching random product...")
         product = fetch_random_product()
         if product:
+            print("Product found:", product)
             response = send_message(product)
-            print(response)
+            print("Message sent:", response)
         else:
             print("No products found.")
         time.sleep(60)  # Wait for 1 minute before posting the next product
