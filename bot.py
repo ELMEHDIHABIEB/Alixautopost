@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
-import os
+import os 
 
 # Get the bot token and channel ID from environment variables
 BOT_TOKEN = os.environ['BOT_TOKEN']
